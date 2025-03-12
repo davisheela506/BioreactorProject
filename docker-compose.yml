@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres-container
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: bioreactor123
+      POSTGRES_DB: sensor_data
+    ports:
+      - "5432:5433"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  kafka:
+    image: wurstmeister/kafka:latest
+    container_name: kafka-container
+    environment:
+      KAFKA_ADVERTISED_LISTENER: INSIDE_KAFKA:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL: PLAINTEXT
+      KAFKA_LISTENER_NAME: INSIDE_KAFKA
+      KAFKA_LISTENERS: INSIDE_KAFKA://0.0.0.0:9093
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_PORT: 9093
+    depends_on:
+      - zookeeper
+    ports:
+      - "9093:9093"
+
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    container_name: zookeeper-container
+    ports:
+      - "2181:2181"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-container
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+    driver: local
+
